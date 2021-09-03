@@ -26,6 +26,8 @@ from config.log_config import log_level, getLogger
 from config.version import version
 
 # Enable logging
+WELCOME_MESSAGE = 'Bienvenido {}!!! \n' \
+                  'Para cualquier duda mira el mensaje anclado, por favor.'
 
 logger = getLogger(__name__)
 updater = Updater(get_bot_token())
@@ -138,7 +140,7 @@ def manage_new_member(update: telegram.Message, context):
     for member in update.effective_message.new_chat_members:
         if context.bot.id != member.id:
             reply = reply_func(update)
-            reply(f'Bienvenido {member.first_name}')
+            reply(WELCOME_MESSAGE.format(member.first_name))
 
 
 def main():
