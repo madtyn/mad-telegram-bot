@@ -73,10 +73,10 @@ formatter = Formatter(LOG_MESSAGE_FORMAT.format(version_num))
 formatter.converter = my_timezone_time
 
 handlers = []
-fh = TimedRotatingFileHandler(LOGFILE_PATH, when='midnight')
-fh.setFormatter(formatter)
-fh.setLevel(logging.DEBUG)
-handlers.append(fh)
+#fh = TimedRotatingFileHandler(LOGFILE_PATH, when='midnight')
+#fh.setFormatter(formatter)
+#fh.setLevel(logging.DEBUG)
+#handlers.append(fh)
 
 if deploy_server():
     mh = SMTPHandler(mailhost=("smtp.gmail.com", 587),
