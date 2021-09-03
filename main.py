@@ -164,10 +164,11 @@ def main():
 
     if deploy_server():
         PORT = int(os.environ.get('PORT', '8443'))  # Telegram supported without reverse proxy: 443, 80, 88 and 8443
+        webhook_url = "https://{}.herokuapp.com/{}".format(get_bot_app_name(), get_bot_token())
         updater.start_webhook(listen="0.0.0.0",
                               port=PORT,
-                              url_path=get_bot_token())
-        updater.bot.setWebhook("https://{}.herokuapp.com/{}".format(get_bot_app_name(), get_bot_token()))
+                              url_path=get_bot_token(),
+                              webhook_url=webhook_url)
     else:
         # Start the Bot
         updater.start_polling()  # XXX These are supposed to improve UX: poll_interval = 1.0,timeout=20
