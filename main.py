@@ -14,10 +14,12 @@ bot.
 """
 import os
 import sys
+from random import shuffle
 from threading import Thread
 
 import telegram
-from telegram.ext import Updater, MessageHandler, CommandHandler, Filters
+from telegram import ChatPermissions, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Updater, MessageHandler, CommandHandler, Filters, CallbackQueryHandler
 
 from apis.tgram.utils import restricted, reply_func, admin_reply, set_bot
 from config.common import deploy_server
@@ -26,11 +28,15 @@ from config.log_config import log_level, getLogger
 from config.version import version
 
 # Enable logging
-WELCOME_MESSAGE = 'Bienvenido {}!!! \n' \
-                  'Para cualquier duda mira el mensaje anclado, por favor.'
+
 
 logger = getLogger(__name__)
 updater = Updater(get_bot_token())
+
+TEST_MESSAGE = 'Hola {}, necesitamos comprobar que no eres un bot, por favor elige la bebida que hay en el menú.'
+WELCOME_MESSAGE = 'Has superado la prueba.Te damos la bienvenida, {}!!! \n' \
+                  'Para cualquier duda mira el mensaje anclado, por favor.'
+MTG_CHAT_ID = -1001234452463
 
 
 def shutdown(update, context):
@@ -128,10 +134,9 @@ def error_handler(update, context):
     logger.warning('La actualización "%s" causó el error "%s"', update, context.error)
 
 
-def manage_new_member(update: telegram.Message, context):
+def manage_new_member(update: telegram.Update, context):
     """
-    Manages a new member in an Alfred-moderated-chat.
-    NOTE: Right now it only registers in database every new chat the bot enters in
+    Manages a new member in an bot-moderated-chat.
 
     :param context: the context
     :param update: the update info from Telegram for this command
@@ -140,7 +145,85 @@ def manage_new_member(update: telegram.Message, context):
     for member in update.effective_message.new_chat_members:
         if context.bot.id != member.id:
             reply = reply_func(update)
-            reply(WELCOME_MESSAGE.format(member.first_name))
+            permissions = ChatPermissions(
+                can_send_messages=False,
+                can_send_media_messages=False,
+                can_send_other_messages=False,
+                can_add_web_page_previews=False
+                )
+            context.bot.restrict_chat_member(
+                int(update.effective_chat.id),
+                member.id,
+                permissions,
+            )
+            markup = get_keyboard_markup(member)
+            reply(TEST_MESSAGE.format(member.first_name), reply_markup=markup)
+
+
+def get_keyboard_markup(member):
+    keyboard_items = [
+        InlineKeyboardButton("🥩", callback_data=f'{member.id},{member.first_name},bistec'),
+        InlineKeyboardButton("🥝", callback_data=f'{member.id},{member.first_name},kiwi'),
+        InlineKeyboardButton("🥛", callback_data=f'{member.id},{member.first_name},leche'),
+        InlineKeyboardButton("🥓", callback_data=f'{member.id},{member.first_name},bacon'),
+        InlineKeyboardButton("🥥", callback_data=f'{member.id},{member.first_name},coco'),
+        InlineKeyboardButton("🍩", callback_data=f'{member.id},{member.first_name},donut'),
+        InlineKeyboardButton("🌮", callback_data=f'{member.id},{member.first_name},taco'),
+        InlineKeyboardButton("🍕", callback_data=f'{member.id},{member.first_name},pizza'),
+        InlineKeyboardButton("🥗", callback_data=f'{member.id},{member.first_name},ensalada'),
+        InlineKeyboardButton("🍌", callback_data=f'{member.id},{member.first_name},plátano'),
+        InlineKeyboardButton("🌰", callback_data=f'{member.id},{member.first_name},castaña'),
+        InlineKeyboardButton("🍭", callback_data=f'{member.id},{member.first_name},chupachups'),
+        InlineKeyboardButton("🥑", callback_data=f'{member.id},{member.first_name},aguacate'),
+        InlineKeyboardButton("🍗", callback_data=f'{member.id},{member.first_name},pollo'),
+        InlineKeyboardButton("🥪", callback_data=f'{member.id},{member.first_name},sandwich'),
+        InlineKeyboardButton("🥒", callback_data=f'{member.id},{member.first_name},pepino')
+    ]
+
+    shuffle(keyboard_items)
+    keyboard = []
+
+    counter = 0
+    NUM_FILAS = 4
+    NUM_BOTONES = 4
+    for i in range(NUM_FILAS):  # create a list of the rows contained in the keyboard
+        row = []
+        for n in range(NUM_BOTONES):
+            keyboard_item = keyboard_items[counter]
+            row.append(keyboard_item)  # fills nested lists with data
+            counter += 1
+        keyboard.append(row)
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    return reply_markup
+
+
+def button_pressed(update: telegram.Update, context):
+    query = update.callback_query
+    person_who_entered_the_chat = int(query.data.split(",")[0])
+    person_name = query.data.split(",")[1]
+    person_who_pressed_button = query.from_user.id
+
+    if person_who_pressed_button == person_who_entered_the_chat:
+        if 'leche' in query.data:
+            permissions = ChatPermissions(
+                can_send_messages=True,
+                can_send_media_messages=True,
+                can_send_other_messages=True,
+                can_add_web_page_previews=True,
+                )
+            context.bot.restrict_chat_member(
+                int(update.effective_chat.id),
+                person_who_entered_the_chat,
+                permissions,
+            )
+            context.bot.delete_message(
+                chat_id=update.callback_query.message.chat_id,
+                message_id=update.callback_query.message.message_id
+            )
+            update.effective_chat.send_message(WELCOME_MESSAGE.format(person_name))
+        else:
+            query.edit_message_text(text=f"🚨 El usuario {person_name} es sospechoso y fue puesto en cuarentena! 🚨")
 
 
 def main():
@@ -160,6 +243,8 @@ def main():
 
     dp.add_handler(MessageHandler(Filters.status_update.new_chat_members,
                                   manage_new_member))
+
+    dp.add_handler(CallbackQueryHandler(button_pressed))
 
     # log all errors
     dp.add_error_handler(error_handler)
