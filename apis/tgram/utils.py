@@ -27,9 +27,9 @@ def get_bot():
 def reply_chat(chat_id, message, msg_edit=None, *args, **kwargs):
     """
     Replies in a chat_id with a message
-    :param message: the text for sending
     :param chat_id: the chat id
-    :param msg_edit: reference message for editing and not repyling to it
+    :param message: the text for sending
+    :param msg_edit: reference message for editing and not replying to it
     :param args: the args list
     :param kwargs: the extra named arguments for sending the message
     :return:
