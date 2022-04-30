@@ -66,7 +66,7 @@ def logged(input_logger):
 
 
 def my_timezone_time(*args):
-    return SERVER_TZ.localize(datetime.now()).astimezone(USER_TZ).timetuple()
+    return datetime.now(SERVER_TZ).astimezone(USER_TZ).timetuple()
 
 
 formatter = Formatter(LOG_MESSAGE_FORMAT.format(version_num))

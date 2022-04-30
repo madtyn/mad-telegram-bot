@@ -8,9 +8,7 @@ SPAIN_TIMEZONE = pytz.timezone('Europe/Madrid')
 
 """
 
-import pytz
-import tzlocal
+import dateutil.tz as tz
 
-
-USER_TZ = pytz.timezone('Europe/Madrid')
-SERVER_TZ = tzlocal.get_localzone()
+USER_TZ = tz.gettz('Europe/Madrid')
+SERVER_TZ = tz.tzlocal()
