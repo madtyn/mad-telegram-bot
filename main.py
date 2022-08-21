@@ -20,6 +20,7 @@ from threading import Thread
 import telegram
 from telegram import ChatPermissions, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, MessageHandler, CommandHandler, Filters, CallbackQueryHandler
+from telegram.utils.helpers import mention_html
 
 from apis.tgram.utils import restricted, reply_func, admin_reply, set_bot
 from config.common import deploy_server
@@ -195,6 +196,9 @@ def manage_new_member(update: telegram.Update, context: telegram.ext.callbackcon
     member: telegram.User
     logger.info('New member detected')
     for member in update.effective_message.new_chat_members:
+        if member.is_bot:
+            context.bot.ban_chat_member(update.effective_chat.id, member.id, until_date=forever_dt())
+
         if context.bot.id != member.id:
             revoke_member_permissions(context, update, member)
             message = reply_captcha_to_user(update, member)
@@ -214,7 +218,7 @@ def manage_new_member(update: telegram.Update, context: telegram.ext.callbackcon
 def reply_captcha_to_user(update, member):
     reply = reply_func(update)
     markup = get_keyboard_markup(member)
-    message = reply(TEST_MESSAGE.format(member.first_name), reply_markup=markup)
+    message = reply(TEST_MESSAGE.format(mention_html(member.id, member.first_name)), reply_markup=markup, parse_mode='HTML')
     return message
 
 
