@@ -42,6 +42,13 @@ WELCOME_MESSAGE = 'Has superado la prueba. Te damos la bienvenida, {}!!! \n' \
 BAN_MESSAGE = 'El usuario {} ha sido exiliado por no resolver el captcha a tiempo. Me he ganado un +1'
 MTG_CHAT_ID = -1001234452463
 
+OK_ITEMS = {
+    "leche": "🥛",
+    "cerbeza" : "🍺",
+    "vino" : "🍷",
+    "refresco" : "🥤",
+    "zumo" : "🧃"
+}
 
 def main():
     """Start the bot."""
@@ -239,11 +246,14 @@ def revoke_member_permissions(context, update, member):
 
 def button_pressed(update: telegram.Update, context: telegram.ext.callbackcontext.CallbackContext):
     query = update.callback_query
-    str_id_who_entered_the_chat = query.data.split(",")[0]
+    query_data = query.data.split(",")
+    str_id_who_entered_the_chat = query_data[0]
     id_who_entered_the_chat = int(str_id_who_entered_the_chat)
 
-    person_name = query.data.split(",")[1]
+    person_name = query_data[1]
     id_who_pressed_button = query.from_user.id
+
+    drink_selected = query_data[2]
 
     if id_who_pressed_button == id_who_entered_the_chat:
         job_to_be_cancelled = None
@@ -252,7 +262,7 @@ def button_pressed(update: telegram.Update, context: telegram.ext.callbackcontex
             job_to_be_cancelled = jobs_tuple[0]
         except IndexError:
             pass
-        if 'leche' in query.data:
+        if drink_selected in OK_ITEMS.keys:
             if job_to_be_cancelled:
                 job_to_be_cancelled.job.remove()
             grant_permissions_to_user(context, update, id_who_entered_the_chat)
@@ -295,10 +305,15 @@ def kick_dt():
 
 
 def get_keyboard_markup(member):
+    ok_keyboard_items = []
+    for ok_item in OK_ITEMS:
+        ok_keyboard_items.append(InlineKeyboardButton(OK_ITEMS[ok_item], callback_data=f'{member.id},{member.first_name},{ok_item}'))
+    
+    shuffle(ok_keyboard_items)
+
     keyboard_items = [
         InlineKeyboardButton("🥩", callback_data=f'{member.id},{member.first_name},bistec'),
         InlineKeyboardButton("🥝", callback_data=f'{member.id},{member.first_name},kiwi'),
-        InlineKeyboardButton("🥛", callback_data=f'{member.id},{member.first_name},leche'),
         InlineKeyboardButton("🥓", callback_data=f'{member.id},{member.first_name},bacon'),
         InlineKeyboardButton("🥥", callback_data=f'{member.id},{member.first_name},coco'),
         InlineKeyboardButton("🍩", callback_data=f'{member.id},{member.first_name},donut'),
@@ -314,9 +329,10 @@ def get_keyboard_markup(member):
         InlineKeyboardButton("🥒", callback_data=f'{member.id},{member.first_name},pepino')
     ]
 
+    keyboard_items.append(ok_keyboard_items[0])
+    
     shuffle(keyboard_items)
     keyboard = []
-
     counter = 0
     NUM_FILAS = 4
     NUM_BOTONES = 4
