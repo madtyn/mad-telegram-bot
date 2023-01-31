@@ -14,7 +14,7 @@ bot.
 """
 import os
 import sys
-from random import shuffle
+import random
 from threading import Thread
 
 import telegram
@@ -44,7 +44,7 @@ MTG_CHAT_ID = -1001234452463
 
 OK_ITEMS = {
     "leche": "🥛",
-    "cerbeza" : "🍺",
+    "cerveza" : "🍺",
     "vino" : "🍷",
     "refresco" : "🥤",
     "zumo" : "🧃"
@@ -246,7 +246,7 @@ def revoke_member_permissions(context, update, member):
 
 def button_pressed(update: telegram.Update, context: telegram.ext.callbackcontext.CallbackContext):
     query = update.callback_query
-    query_data = query.data.split(",")
+    query_data = query.data
     str_id_who_entered_the_chat = query_data[0]
     id_who_entered_the_chat = int(str_id_who_entered_the_chat)
 
@@ -307,31 +307,31 @@ def kick_dt():
 def get_keyboard_markup(member):
     ok_keyboard_items = []
     for ok_item in OK_ITEMS:
-        ok_keyboard_items.append(InlineKeyboardButton(OK_ITEMS[ok_item], callback_data=f'{member.id},{member.first_name},{ok_item}'))
-    
-    shuffle(ok_keyboard_items)
+        ok_keyboard_items.append(InlineKeyboardButton(OK_ITEMS[ok_item], callback_data=(member.id,member.first_name,ok_item)))
+
+    ok_item = random.choice(ok_keyboard_items)
 
     keyboard_items = [
-        InlineKeyboardButton("🥩", callback_data=f'{member.id},{member.first_name},bistec'),
-        InlineKeyboardButton("🥝", callback_data=f'{member.id},{member.first_name},kiwi'),
-        InlineKeyboardButton("🥓", callback_data=f'{member.id},{member.first_name},bacon'),
-        InlineKeyboardButton("🥥", callback_data=f'{member.id},{member.first_name},coco'),
-        InlineKeyboardButton("🍩", callback_data=f'{member.id},{member.first_name},donut'),
-        InlineKeyboardButton("🌮", callback_data=f'{member.id},{member.first_name},taco'),
-        InlineKeyboardButton("🍕", callback_data=f'{member.id},{member.first_name},pizza'),
-        InlineKeyboardButton("🥗", callback_data=f'{member.id},{member.first_name},ensalada'),
-        InlineKeyboardButton("🍌", callback_data=f'{member.id},{member.first_name},plátano'),
-        InlineKeyboardButton("🌰", callback_data=f'{member.id},{member.first_name},castaña'),
-        InlineKeyboardButton("🍭", callback_data=f'{member.id},{member.first_name},chupachups'),
-        InlineKeyboardButton("🥑", callback_data=f'{member.id},{member.first_name},aguacate'),
-        InlineKeyboardButton("🍗", callback_data=f'{member.id},{member.first_name},pollo'),
-        InlineKeyboardButton("🥪", callback_data=f'{member.id},{member.first_name},sandwich'),
-        InlineKeyboardButton("🥒", callback_data=f'{member.id},{member.first_name},pepino')
+        InlineKeyboardButton("🥩", callback_data=(member.id,member.first_name,'bistec')),
+        InlineKeyboardButton("🥝", callback_data=(member.id,member.first_name,'kiwi')),
+        InlineKeyboardButton("🥓", callback_data=(member.id,member.first_name,'bacon')),
+        InlineKeyboardButton("🥥", callback_data=(member.id,member.first_name,'coco')),
+        InlineKeyboardButton("🍩", callback_data=(member.id,member.first_name,'donut')),
+        InlineKeyboardButton("🌮", callback_data=(member.id,member.first_name,'taco')),
+        InlineKeyboardButton("🍕", callback_data=(member.id,member.first_name,'pizza')),
+        InlineKeyboardButton("🥗", callback_data=(member.id,member.first_name,'ensalada')),
+        InlineKeyboardButton("🍌", callback_data=(member.id,member.first_name,'plátano')),
+        InlineKeyboardButton("🌰", callback_data=(member.id,member.first_name,'castaña')),
+        InlineKeyboardButton("🍭", callback_data=(member.id,member.first_name,'chupachups')),
+        InlineKeyboardButton("🥑", callback_data=(member.id,member.first_name,'aguacate')),
+        InlineKeyboardButton("🍗", callback_data=(member.id,member.first_name,'pollo')),
+        InlineKeyboardButton("🥪", callback_data=(member.id,member.first_name,'sandwich')),
+        InlineKeyboardButton("🥒", callback_data=(member.id,member.first_name,'pepino'))
     ]
 
-    keyboard_items.append(ok_keyboard_items[0])
+    keyboard_items.append(ok_item)
     
-    shuffle(keyboard_items)
+    random.shuffle(keyboard_items)
     keyboard = []
     counter = 0
     NUM_FILAS = 4
