@@ -49,7 +49,7 @@ def reply_chat(chat_id, message, msg_edit=None, *args, **kwargs):
                                                     timeout=BOT_TIMEOUT, *args, **kwargs)
                 exit_condition = True
                 return result
-            except (TimedOut, NetworkError):
+            except (TimedOut, NetworkError) as e:
                 attempts += 1
                 if attempts > MAX_ATTEMPTS:
                     exit_condition = True

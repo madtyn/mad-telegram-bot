@@ -261,7 +261,7 @@ def button_pressed(update: telegram.Update, context: telegram.ext.callbackcontex
             job_to_be_cancelled = jobs_tuple[0]
         except IndexError:
             pass
-        if drink_selected in OK_ITEMS.keys:
+        if drink_selected in OK_ITEMS.keys():
             if job_to_be_cancelled:
                 job_to_be_cancelled.job.remove()
             grant_permissions_to_user(context, update, id_who_entered_the_chat)
@@ -306,30 +306,30 @@ def kick_dt():
 def get_keyboard_markup(member):
     ok_keyboard_items = []
     for ok_item in OK_ITEMS:
-        ok_keyboard_items.append(InlineKeyboardButton(OK_ITEMS[ok_item], callback_data=(ok_item,member.id,member.first_name)))
+        ok_keyboard_items.append(InlineKeyboardButton(OK_ITEMS[ok_item], callback_data=f'{ok_item},{member.id},{member.first_name}'))
 
     ok_item = random.choice(ok_keyboard_items)
 
     keyboard_items = [
-        InlineKeyboardButton("🥩", callback_data=('bistec',member.id,member.first_name)),
-        InlineKeyboardButton("🥝", callback_data=('kiwi',member.id,member.first_name)),
-        InlineKeyboardButton("🥓", callback_data=('bacon',member.id,member.first_name)),
-        InlineKeyboardButton("🥥", callback_data=('coco',member.id,member.first_name)),
-        InlineKeyboardButton("🍩", callback_data=('donut',member.id,member.first_name)),
-        InlineKeyboardButton("🌮", callback_data=('taco',member.id,member.first_name)),
-        InlineKeyboardButton("🍕", callback_data=('pizza',member.id,member.first_name)),
-        InlineKeyboardButton("🥗", callback_data=('ensalada',member.id,member.first_name)),
-        InlineKeyboardButton("🍌", callback_data=('plátano',member.id,member.first_name)),
-        InlineKeyboardButton("🌰", callback_data=('castaña',member.id,member.first_name)),
-        InlineKeyboardButton("🍭", callback_data=('chupachups',member.id,member.first_name)),
-        InlineKeyboardButton("🥑", callback_data=('aguacate',member.id,member.first_name)),
-        InlineKeyboardButton("🍗", callback_data=('pollo',member.id,member.first_name)),
-        InlineKeyboardButton("🥪", callback_data=('sandwich',member.id,member.first_name)),
-        InlineKeyboardButton("🥒", callback_data=('pepino',member.id,member.first_name))
+        InlineKeyboardButton("🥩", callback_data=f'bistec,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🥝", callback_data=f'kiwi,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🥓", callback_data=f'bacon,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🥥", callback_data=f'coco,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🍩", callback_data=f'donut,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🌮", callback_data=f'taco,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🍕", callback_data=f'pizza,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🥗", callback_data=f'ensalada,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🍌", callback_data=f'plátano,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🌰", callback_data=f'castaña,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🍭", callback_data=f'chupachups,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🥑", callback_data=f'aguacate,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🍗", callback_data=f'pollo,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🥪", callback_data=f'sandwich,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🥒", callback_data=f'pepino,{member.id},{member.first_name}'),
     ]
 
     keyboard_items.append(ok_item)
-    
+
     random.shuffle(keyboard_items)
     keyboard = []
     counter = 0
