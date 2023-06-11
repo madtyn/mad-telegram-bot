@@ -14,7 +14,7 @@ bot.
 """
 import os
 import sys
-from random import shuffle
+import random as rnd
 from threading import Thread
 
 import telegram
@@ -33,14 +33,21 @@ import dateutil.relativedelta as dtutil
 # Enable logging
 CAPTCHA_TIMEOUT_SECONDS = 60
 
+CORRECT_ANSWERS = {
+    "leche": "🥛",
+    "vino": "🍷",
+    "refresco": "🥤",
+    "zumo": "🧃"
+}
+
 logger = getLogger(__name__)
 updater = Updater(get_bot_token())
 
-TEST_MESSAGE = 'Hola {}, necesitamos comprobar que no eres un bot, tienes 15 s para elegir la bebida que hay en el menú.'
+TEST_MESSAGE = 'Hola {}, necesitamos comprobar que no eres un bot, tienes 15s para elegir la bebida que hay en el menú.'
+PINNED_MESSAGE = 'https://t.me/magicarena/80123'
 WELCOME_MESSAGE = 'Has superado la prueba. Te damos la bienvenida, {}!!! \n' \
-                  'Para cualquier duda mira el mensaje anclado, por favor:\n\thttps://t.me/magicarena/80123'
+                  'Para cualquier duda mira el mensaje anclado, por favor:\n\t' + PINNED_MESSAGE
 BAN_MESSAGE = 'El usuario {} ha sido exiliado por no resolver el captcha a tiempo. Me he ganado un +1'
-MTG_CHAT_ID = -1001234452463
 
 
 def main():
@@ -61,7 +68,7 @@ def main():
     dp.add_handler(MessageHandler(Filters.status_update.new_chat_members,
                                   manage_new_member))
 
-    dp.add_handler(CallbackQueryHandler(button_pressed))
+    dp.add_handler(CallbackQueryHandler(captcha_button_pressed))
 
     # log all errors
     dp.add_error_handler(error_handler)
@@ -168,6 +175,7 @@ def show_help(update, context):
     help_text = 'Bienvenido al bot de Telegram (*' + version() + '*) para administrar grupos.\n' \
                 'Este bot creará un borrador de forma automática en blogger al introducir una URL seguida del título deseado\n' \
                 '  /help - Muestra la ayuda\n' \
+                '  /addpresentation - Sube documento relativo a unha charla/presentación\n' \
                 '  /quit - Detiene completamente el bot\n' \
                 '  /restart - Reinicia el bot\n'
 
@@ -210,7 +218,7 @@ def manage_new_member(update: telegram.Update, context: telegram.ext.callbackcon
                     'message': message
                 }
             }
-            context.job_queue.run_once(captcha_timeout, CAPTCHA_TIMEOUT_SECONDS,
+            context.job_queue.run_once(captcha_ban_if_timeout, CAPTCHA_TIMEOUT_SECONDS,
                                        name=str(member.id),
                                        job_kwargs=captcha_args)
 
@@ -237,12 +245,14 @@ def revoke_member_permissions(context, update, member):
     )
 
 
-def button_pressed(update: telegram.Update, context: telegram.ext.callbackcontext.CallbackContext):
+def captcha_button_pressed(update: telegram.Update, context: telegram.ext.callbackcontext.CallbackContext):
     query = update.callback_query
-    str_id_who_entered_the_chat = query.data.split(",")[0]
+    query_data = query.data.split(",", 2)
+    drink_selected = query_data[0]
+    str_id_who_entered_the_chat = query_data[1]
     id_who_entered_the_chat = int(str_id_who_entered_the_chat)
 
-    person_name = query.data.split(",")[1]
+    person_name = query.data.split(",")[2]
     id_who_pressed_button = query.from_user.id
 
     if id_who_pressed_button == id_who_entered_the_chat:
@@ -252,7 +262,7 @@ def button_pressed(update: telegram.Update, context: telegram.ext.callbackcontex
             job_to_be_cancelled = jobs_tuple[0]
         except IndexError:
             pass
-        if 'leche' in query.data:
+        if drink_selected in CORRECT_ANSWERS.keys():
             if job_to_be_cancelled:
                 job_to_be_cancelled.job.remove()
             grant_permissions_to_user(context, update, id_who_entered_the_chat)
@@ -281,7 +291,7 @@ def grant_permissions_to_user(context, update, id_who_entered_the_chat):
     )
 
 
-def captcha_timeout(context: telegram.ext.callbackcontext.CallbackContext, member: telegram.User, chat_id, message: telegram.Message):
+def captcha_ban_if_timeout(context: telegram.ext.callbackcontext.CallbackContext, member: telegram.User, chat_id, message: telegram.Message):
     context.bot.ban_chat_member(chat_id, member.id, until_date=forever_dt())
     message.edit_text(BAN_MESSAGE.format(member.first_name), reply_markup=None)
 
@@ -296,27 +306,29 @@ def kick_dt():
 
 def get_keyboard_markup(member):
     keyboard_items = [
-        InlineKeyboardButton("🥩", callback_data=f'{member.id},{member.first_name},bistec'),
-        InlineKeyboardButton("🥝", callback_data=f'{member.id},{member.first_name},kiwi'),
-        InlineKeyboardButton("🥛", callback_data=f'{member.id},{member.first_name},leche'),
-        InlineKeyboardButton("🥓", callback_data=f'{member.id},{member.first_name},bacon'),
-        InlineKeyboardButton("🥥", callback_data=f'{member.id},{member.first_name},coco'),
-        InlineKeyboardButton("🍩", callback_data=f'{member.id},{member.first_name},donut'),
-        InlineKeyboardButton("🌮", callback_data=f'{member.id},{member.first_name},taco'),
-        InlineKeyboardButton("🍕", callback_data=f'{member.id},{member.first_name},pizza'),
-        InlineKeyboardButton("🥗", callback_data=f'{member.id},{member.first_name},ensalada'),
-        InlineKeyboardButton("🍌", callback_data=f'{member.id},{member.first_name},plátano'),
-        InlineKeyboardButton("🌰", callback_data=f'{member.id},{member.first_name},castaña'),
-        InlineKeyboardButton("🍭", callback_data=f'{member.id},{member.first_name},chupachups'),
-        InlineKeyboardButton("🥑", callback_data=f'{member.id},{member.first_name},aguacate'),
-        InlineKeyboardButton("🍗", callback_data=f'{member.id},{member.first_name},pollo'),
-        InlineKeyboardButton("🥪", callback_data=f'{member.id},{member.first_name},sandwich'),
-        InlineKeyboardButton("🥒", callback_data=f'{member.id},{member.first_name},pepino')
+        InlineKeyboardButton("🥩", callback_data=f'bistec,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🥝", callback_data=f'kiwi,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🥓", callback_data=f'bacon,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🥥", callback_data=f'coco,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🍩", callback_data=f'donut,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🌮", callback_data=f'taco,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🍕", callback_data=f'pizza,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🥗", callback_data=f'ensalada,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🍌", callback_data=f'plátano,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🌰", callback_data=f'castaña,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🍭", callback_data=f'chupachups,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🥑", callback_data=f'aguacate,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🍗", callback_data=f'pollo,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🥪", callback_data=f'sandwich,{member.id},{member.first_name}'),
+        InlineKeyboardButton("🥒", callback_data=f'pepino,{member.id},{member.first_name}'),
     ]
 
-    shuffle(keyboard_items)
-    keyboard = []
+    solution_key, solution_emoji = rnd.choice(list(CORRECT_ANSWERS.items()))
+    keyboard_items.append(InlineKeyboardButton(f"{solution_emoji}", callback_data=f'{solution_key},{member.id},{member.first_name}'))
 
+    rnd.shuffle(keyboard_items)
+
+    keyboard = []
     counter = 0
     NUM_FILAS = 4
     NUM_BOTONES = 4
