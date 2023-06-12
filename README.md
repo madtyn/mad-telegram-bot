@@ -1,4 +1,4 @@
-# mtga-telegram-bot
+# mad-telegram-bot
 
 # Deployment
 
