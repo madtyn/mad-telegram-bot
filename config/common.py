@@ -4,6 +4,7 @@ MARTIN = 13333606
 
 COMMON_SETTINGS = {
     'LIST_OF_ADMINS': [MARTIN, ],
+    'PINNED_MESSAGE': 'https://t.me/magicarena/80123',
 }
 
 

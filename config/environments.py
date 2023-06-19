@@ -27,12 +27,18 @@ VALUES.update(COMMON_SETTINGS)
 VALUES.update(SETTINGS)
 
 
-def get_bot_app_name():
+def get_bot_url():
     """
     Returns the bot app name for Heroku deployment
     :return: the bot app name string
     """
-    return VALUES['BOT_APP_NAME']
+    host = ''
+    if VALUES.get('HOST'):
+        host = f"{VALUES.get('HOST')}"
+    elif VALUES.get('BOT_APP_NAME'):
+        host = f"{VALUES.get('BOT_APP_NAME')}.herokuapp.com"
+
+    return f'https://{host}/{get_bot_token()}'
 
 
 def get_bot_token():
@@ -53,3 +59,9 @@ def get_allowed_users():
 
 def get_admin_id():
     return VALUES['ADMIN_ID']
+
+
+def get_pinned_message():
+    if VALUES.get('PINNED_MESSAGE', '').strip():
+        return f"Para cualquier duda mira el mensaje anclado, por favor:\n\t {VALUES['PINNED_MESSAGE']} "
+    return ''

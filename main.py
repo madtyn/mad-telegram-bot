@@ -18,13 +18,13 @@ import random as rnd
 from threading import Thread
 
 import telegram
-from telegram import ChatPermissions, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, MessageHandler, CommandHandler, Filters, CallbackQueryHandler
+from telegram import ChatPermissions, InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram.ext import Updater, MessageHandler, CommandHandler, Filters, CallbackQueryHandler, CallbackContext
 from telegram.utils.helpers import mention_html
 
 from apis.tgram.utils import restricted, reply_func, admin_reply, set_bot
 from config.common import deploy_server
-from config.environments import get_bot_token, get_bot_app_name
+from config.environments import get_bot_token, get_bot_url, get_pinned_message
 from config.log_config import log_level, getLogger
 from config.version import version
 import datetime as dt
@@ -44,9 +44,8 @@ logger = getLogger(__name__)
 updater = Updater(get_bot_token())
 
 TEST_MESSAGE = 'Hola {}, necesitamos comprobar que no eres un bot, tienes 15s para elegir la bebida que hay en el menú.'
-PINNED_MESSAGE = 'https://t.me/magicarena/80123'
-WELCOME_MESSAGE = 'Has superado la prueba. Te damos la bienvenida, {}!!! \n' \
-                  'Para cualquier duda mira el mensaje anclado, por favor:\n\t' + PINNED_MESSAGE
+PINNED_MESSAGE = get_pinned_message()
+WELCOME_MESSAGE = 'Has superado la prueba. Te damos la bienvenida, {}!!! \n' + PINNED_MESSAGE
 BAN_MESSAGE = 'El usuario {} ha sido exiliado por no resolver el captcha a tiempo. Me he ganado un +1'
 
 
@@ -54,6 +53,7 @@ def main():
     """Start the bot."""
     # Create the EventHandler and pass it your bot's token.
     global updater
+
 
     # schedule_jobs(updater.job_queue)
     # Get the dispatcher to register handlers
@@ -70,12 +70,16 @@ def main():
 
     dp.add_handler(CallbackQueryHandler(captcha_button_pressed))
 
+    dp.add_handler(MessageHandler(Filters.chat_type.private & Filters.document, upload_document))
+
     # log all errors
     dp.add_error_handler(error_handler)
 
     if deploy_server():
         PORT = int(os.environ.get('PORT', '8443'))  # Telegram supported without reverse proxy: 443, 80, 88 and 8443
-        webhook_url = "https://{}.herokuapp.com/{}".format(get_bot_app_name(), get_bot_token())
+
+
+        webhook_url = "https://{}.herokuapp.com/{}".format(get_bot_url(), get_bot_token())
         updater.start_webhook(listen="0.0.0.0",
                               port=PORT,
                               url_path=get_bot_token(),
@@ -96,6 +100,22 @@ def main():
     # SIGTERM or SIGABRT. This should be used most of the time, since
     # start_polling() is non-blocking and will stop the bot gracefully.
     updater.idle()
+
+
+def upload_document(update: Update, context: CallbackContext):
+    import io
+    from github import Github
+
+    g = Github('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')
+
+    repo = g.get_repo('pythoncoruna/main')
+
+    received_file: telegram.File = context.bot.get_file(update.message.document.file_id)
+    content_stream = io.BytesIO()
+    received_file.download(out=content_stream)
+    content = content_stream.getvalue().decode('utf-8')
+    path = f'resources/presentations/{update.message.document.file_name}'
+    repo.create_file(path, f'Subida de {update.message.document.file_name}', content)
 
 
 def shutdown(update, context):
