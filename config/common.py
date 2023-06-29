@@ -5,6 +5,7 @@ MARTIN = 13333606
 COMMON_SETTINGS = {
     'LIST_OF_ADMINS': [MARTIN, ],
     'PINNED_MESSAGE': 'https://t.me/magicarena/80123',
+    'GITHUB_TOKEN': os.environ.get('GITHUB_TOKEN'),
 }
 
 

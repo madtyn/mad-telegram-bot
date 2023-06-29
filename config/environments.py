@@ -49,6 +49,14 @@ def get_bot_token():
     return VALUES['TELEGRAM_BOT_TOKEN']
 
 
+def get_github_token():
+    """
+    Returns the configured bot token
+    :return: the bot token for the active environment
+    """
+    return VALUES['GITHUB_TOKEN']
+
+
 def get_allowed_users():
     """
     Returns the allowed users' ids for this bot

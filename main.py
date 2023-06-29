@@ -25,7 +25,7 @@ from telegram.utils.helpers import mention_html
 
 from apis.tgram.utils import restricted, reply_func, admin_reply, set_bot
 from config.common import deploy_server
-from config.environments import get_bot_token, get_bot_url, get_pinned_message
+from config.environments import get_bot_token, get_bot_url, get_pinned_message, get_github_token
 from config.log_config import log_level, getLogger
 from config.version import version
 import datetime as dt
@@ -135,8 +135,7 @@ def upload_document(update: Update, context: CallbackContext):
     import io
     from github import Github
 
-
-    g = Github(os.environ.get('GITHUB_TOKEN'))
+    g = Github(get_github_token())
 
     repo = g.get_repo('pythoncoruna/main')
 
