@@ -99,13 +99,13 @@ def restricted(input_logger):
         :return: the restricted handler
         """
         @wraps(my_handler)
-        def wrapped(bot, update, *args, **kwargs):
+        def wrapped(update, context, *args, **kwargs):
             user_id, user_name = update.effective_user.id, update.effective_user.first_name
             if user_id not in get_allowed_users():
                 input_logger.warning("Acceso no autorizado para el usuario {} con id {}".format(user_name, user_id))
                 return
             input_logger.info('Entrada: {} '.format(my_handler.__name__))
-            result = my_handler(bot, update, *args, **kwargs)
+            result = my_handler(update, context, *args, **kwargs)
             input_logger.info('Salida: {} '.format(my_handler.__name__))
             return result
         return wrapped
