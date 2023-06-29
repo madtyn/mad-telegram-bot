@@ -19,7 +19,8 @@ from threading import Thread
 
 import telegram
 from telegram import ChatPermissions, InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import Updater, MessageHandler, CommandHandler, Filters, CallbackQueryHandler, CallbackContext
+from telegram.ext import Updater, MessageHandler, CommandHandler, Filters, CallbackQueryHandler, CallbackContext, \
+    ConversationHandler
 from telegram.utils.helpers import mention_html
 
 from apis.tgram.utils import restricted, reply_func, admin_reply, set_bot
@@ -29,6 +30,8 @@ from config.log_config import log_level, getLogger
 from config.version import version
 import datetime as dt
 import dateutil.relativedelta as dtutil
+
+ENTER_PRESENTATION_FILE = 0
 
 # Enable logging
 CAPTCHA_TIMEOUT_SECONDS = 60
@@ -70,7 +73,18 @@ def main():
 
     dp.add_handler(CallbackQueryHandler(captcha_button_pressed))
 
-    dp.add_handler(MessageHandler(Filters.chat_type.private & Filters.document, upload_document))
+    conv_handler = ConversationHandler(
+        entry_points=[
+            CommandHandler('addpresentations', ask_for_presentations),
+        ],
+        states={
+            ENTER_PRESENTATION_FILE: [MessageHandler(Filters.chat_type.private & Filters.document, upload_document)],
+        },
+        fallbacks=[],
+    )
+    dp.add_handler(conv_handler)
+
+    # dp.add_handler(MessageHandler(Filters.chat_type.private & Filters.document, upload_document))
 
     # log all errors
     dp.add_error_handler(error_handler)
@@ -102,20 +116,46 @@ def main():
     updater.idle()
 
 
+def ask_for_presentations(update: Update, context: CallbackContext):
+    context.bot.send_message(update.effective_chat.id, 'Envíe ahora al bot su fichero o sus ficheros de la presentación/charla')
+    reply_keyboard = [
+        [InlineKeyboardButton('FINALIZAR', callback_data='END_UPLOAD'),]
+    ]
+    reply_markup = InlineKeyboardMarkup(reply_keyboard)
+    context.bot.send_message(update.effective_chat.id, 'O presione el botón para dar por finalizada la subida', reply_markup=reply_markup)
+    return ENTER_PRESENTATION_FILE
+
+
 def upload_document(update: Update, context: CallbackContext):
+    if update.callback_query:
+        if update.callback_query.data == 'END_UPLOAD':
+            update.callback_query.answer('Subida de documentos finalizada')
+            return ConversationHandler.END
+
     import io
     from github import Github
 
-    g = Github('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')
+
+    g = Github(os.environ.get('GITHUB_TOKEN'))
 
     repo = g.get_repo('pythoncoruna/main')
 
     received_file: telegram.File = context.bot.get_file(update.message.document.file_id)
     content_stream = io.BytesIO()
     received_file.download(out=content_stream)
-    content = content_stream.getvalue().decode('utf-8')
+    try:
+        content = content_stream.getvalue().decode('utf-8')
+    except UnicodeDecodeError:
+        content = content_stream.getvalue()
     path = f'resources/presentations/{update.message.document.file_name}'
     repo.create_file(path, f'Subida de {update.message.document.file_name}', content)
+
+    try:
+        update.callback_query.answer('Subiendo documento')
+    except:
+        pass
+
+    return ENTER_PRESENTATION_FILE
 
 
 def shutdown(update, context):
